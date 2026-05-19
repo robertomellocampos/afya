@@ -3,6 +3,6 @@ export interface UpdatePacienteDTO {
   telefone?: string;
   email?: string;
   dataNascimento?: string;
-  sexo?: "M" | "F" | "O";
+  sexo?: 'M' | 'F' | 'O';
   peso?: number;
 }

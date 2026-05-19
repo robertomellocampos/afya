@@ -1,19 +1,27 @@
-import { Request, Response } from "express";
-import { container } from "tsyringe";
-import { CreatePacienteUseCase } from "../../application/usecases/CreatePacienteUseCase";
-import { ListPacientesUseCase } from "../../application/usecases/ListPacientesUseCase";
-import { UpdatePacienteUseCase } from "../../application/usecases/UpdatePacienteUseCase";
-import { createPacienteSchema, updatePacienteSchema } from "../validators/pacienteValidator";
-import { AppError } from "../../shared/errors/AppError";
+import { Request, Response } from 'express';
+import { injectable } from 'tsyringe';
+import { CreatePacienteUseCase } from '../../application/usecases/CreatePacienteUseCase';
+import { ListPacientesUseCase } from '../../application/usecases/ListPacientesUseCase';
+import { ListPacientesPaginatedUseCase } from '../../application/usecases/ListPacientesPaginatedUseCase';
+import { UpdatePacienteUseCase } from '../../application/usecases/UpdatePacienteUseCase';
+import { createPacienteSchema, updatePacienteSchema } from '../validators/pacienteValidator';
 
+@injectable()
 export class PacienteController {
+  constructor(
+    private readonly createPacienteUseCase: CreatePacienteUseCase,
+    private readonly listPacientesUseCase: ListPacientesUseCase,
+    private readonly listPacientesPaginatedUseCase: ListPacientesPaginatedUseCase,
+    private readonly updatePacienteUseCase: UpdatePacienteUseCase
+  ) {}
+
   public async create(req: Request, res: Response): Promise<Response> {
     const parseResult = createPacienteSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({ errors: parseResult.error.errors });
     }
 
-    const useCase = container.resolve(CreatePacienteUseCase);
+    const useCase = this.createPacienteUseCase;
     const dto = parseResult.data;
     const result = await useCase.execute({
       nome: dto.nome,
@@ -33,8 +41,15 @@ export class PacienteController {
   }
 
   public async list(_req: Request, res: Response): Promise<Response> {
-    const useCase = container.resolve(ListPacientesUseCase);
-    const result = await useCase.execute();
+    const result = await this.listPacientesUseCase.execute();
+    return res.status(200).json(result.getValue());
+  }
+
+  public async listPaginated(req: Request, res: Response): Promise<Response> {
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 10;
+
+    const result = await this.listPacientesPaginatedUseCase.execute({ page, pageSize });
     return res.status(200).json(result.getValue());
   }
 
@@ -44,9 +59,8 @@ export class PacienteController {
       return res.status(400).json({ errors: parseResult.error.errors });
     }
 
-    const useCase = container.resolve(UpdatePacienteUseCase);
     const dto = parseResult.data;
-    const result = await useCase.execute(req.params.id, {
+    const result = await this.updatePacienteUseCase.execute(req.params.id, {
       nome: dto.nome,
       telefone: dto.telefone,
       email: dto.email,

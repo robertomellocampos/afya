@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model Paciente {
@@ -17,4 +16,15 @@ model Paciente {
   peso        Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  agendamentos Agendamento[]
+}
+
+model Agendamento {
+  id         String   @id @default(uuid())
+  pacienteId String
+  paciente   Paciente @relation(fields: [pacienteId], references: [id])
+  data       DateTime
+  motivo     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

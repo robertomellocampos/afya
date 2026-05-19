@@ -1,4 +1,5 @@
-import { Paciente } from "../entities/Paciente";
+import { Paciente } from '../entities/Paciente';
+import { PaginationParams, PaginationResult } from '../../shared/types/Pagination';
 
 export interface CreatePacienteData {
   nome: string;
@@ -19,8 +20,9 @@ export interface UpdatePacienteData {
 }
 
 export interface PacienteRepository {
-  create(data: CreatePacienteData): Promise<Paciente>;
+  create(paciente: Paciente): Promise<Paciente>;
   findAll(): Promise<Paciente[]>;
-  update(id: string, data: UpdatePacienteData): Promise<Paciente | null>;
+  findAllPaginated(params: PaginationParams): Promise<PaginationResult<Paciente>>;
+  update(paciente: Paciente): Promise<Paciente | null>;
   findById(id: string): Promise<Paciente | null>;
 }

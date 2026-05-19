@@ -1,11 +1,13 @@
-import { Router } from "express";
-import { PacienteController } from "../controllers/PacienteController";
+import { Router } from 'express';
+import { container } from 'tsyringe';
+import { PacienteController } from '../controllers/PacienteController';
 
 const pacienteRoutes = Router();
-const controller = new PacienteController();
+const controller = container.resolve(PacienteController);
 
-pacienteRoutes.post("/", controller.create.bind(controller));
-pacienteRoutes.get("/", controller.list.bind(controller));
-pacienteRoutes.put("/:id", controller.update.bind(controller));
+pacienteRoutes.post('/', controller.create.bind(controller));
+pacienteRoutes.get('/paginated', controller.listPaginated.bind(controller));
+pacienteRoutes.get('/', controller.list.bind(controller));
+pacienteRoutes.put('/:id', controller.update.bind(controller));
 
 export { pacienteRoutes };

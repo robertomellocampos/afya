@@ -1,29 +1,30 @@
-import { injectable } from "tsyringe";
-import { prisma } from "../prismaClient";
-import { Paciente } from "../../../domain/entities/Paciente";
-import { PacienteRepository, CreatePacienteData, UpdatePacienteData } from "../../../domain/repositories/PacienteRepository";
+import { injectable } from 'tsyringe';
+import { prisma } from '../prismaClient';
+import { Paciente } from '../../../domain/entities/Paciente';
+import { PacienteRepository } from '../../../domain/repositories/PacienteRepository';
+import { PaginationParams, PaginationResult } from '../../../shared/types/Pagination';
 
 @injectable()
 export class PrismaPacienteRepository implements PacienteRepository {
-  public async create(data: CreatePacienteData): Promise<Paciente> {
+  public async create(pacienteEntity: Paciente): Promise<Paciente> {
     const paciente = await prisma.paciente.create({
       data: {
-        nome: data.nome,
-        telefone: data.telefone,
-        email: data.email,
-        dataNascimento: data.dataNascimento,
-        sexo: data.sexo,
-        peso: data.peso,
+        nome: pacienteEntity.nome,
+        telefone: pacienteEntity.telefone,
+        email: pacienteEntity.email,
+        dataNascimento: pacienteEntity.dataNascimento,
+        sexo: pacienteEntity.sexo,
+        peso: pacienteEntity.peso,
       },
     });
 
-    return Paciente.create({
+    return Paciente.fromPrisma({
       id: paciente.id,
       nome: paciente.nome,
       telefone: paciente.telefone,
       email: paciente.email,
       dataNascimento: paciente.dataNascimento,
-      sexo: paciente.sexo as "M" | "F" | "O",
+      sexo: paciente.sexo as 'M' | 'F' | 'O',
       peso: paciente.peso,
       createdAt: paciente.createdAt,
       updatedAt: paciente.updatedAt,
@@ -32,22 +33,61 @@ export class PrismaPacienteRepository implements PacienteRepository {
 
   public async findAll(): Promise<Paciente[]> {
     const pacientes = await prisma.paciente.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     return pacientes.map((paciente: any) =>
-      Paciente.create({
+      Paciente.fromPrisma({
         id: paciente.id,
         nome: paciente.nome,
         telefone: paciente.telefone,
         email: paciente.email,
         dataNascimento: paciente.dataNascimento,
-        sexo: paciente.sexo as "M" | "F" | "O",
+        sexo: paciente.sexo as 'M' | 'F' | 'O',
         peso: paciente.peso,
         createdAt: paciente.createdAt,
         updatedAt: paciente.updatedAt,
-      }),
+      })
     );
+  }
+
+  public async findAllPaginated(params: PaginationParams): Promise<PaginationResult<Paciente>> {
+    const page = params.page ?? 1;
+    const pageSize = params.pageSize ?? 10;
+    const skip = (page - 1) * pageSize;
+
+    const [pacientes, total] = await Promise.all([
+      prisma.paciente.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.paciente.count(),
+    ]);
+
+    const data = pacientes.map((paciente: any) =>
+      Paciente.fromPrisma({
+        id: paciente.id,
+        nome: paciente.nome,
+        telefone: paciente.telefone,
+        email: paciente.email,
+        dataNascimento: paciente.dataNascimento,
+        sexo: paciente.sexo as 'M' | 'F' | 'O',
+        peso: paciente.peso,
+        createdAt: paciente.createdAt,
+        updatedAt: paciente.updatedAt,
+      })
+    );
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      data,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   }
 
   public async findById(id: string): Promise<Paciente | null> {
@@ -56,41 +96,39 @@ export class PrismaPacienteRepository implements PacienteRepository {
       return null;
     }
 
-    return Paciente.create({
+    return Paciente.fromPrisma({
       id: paciente.id,
       nome: paciente.nome,
       telefone: paciente.telefone,
       email: paciente.email,
       dataNascimento: paciente.dataNascimento,
-      sexo: paciente.sexo as "M" | "F" | "O",
+      sexo: paciente.sexo as 'M' | 'F' | 'O',
       peso: paciente.peso,
       createdAt: paciente.createdAt,
       updatedAt: paciente.updatedAt,
     });
   }
 
-  public async update(id: string, data: UpdatePacienteData): Promise<Paciente | null> {
-    const updateData: Record<string, unknown> = {};
-
-    if (data.nome !== undefined) updateData.nome = data.nome;
-    if (data.telefone !== undefined) updateData.telefone = data.telefone;
-    if (data.email !== undefined) updateData.email = data.email;
-    if (data.dataNascimento !== undefined) updateData.dataNascimento = data.dataNascimento;
-    if (data.sexo !== undefined) updateData.sexo = data.sexo;
-    if (data.peso !== undefined) updateData.peso = data.peso;
-
+  public async update(pacienteEntity: Paciente): Promise<Paciente | null> {
     const paciente = await prisma.paciente.update({
-      where: { id },
-      data: updateData,
+      where: { id: pacienteEntity.id },
+      data: {
+        nome: pacienteEntity.nome,
+        telefone: pacienteEntity.telefone,
+        email: pacienteEntity.email,
+        dataNascimento: pacienteEntity.dataNascimento,
+        sexo: pacienteEntity.sexo,
+        peso: pacienteEntity.peso,
+      },
     });
 
-    return Paciente.create({
+    return Paciente.fromPrisma({
       id: paciente.id,
       nome: paciente.nome,
       telefone: paciente.telefone,
       email: paciente.email,
       dataNascimento: paciente.dataNascimento,
-      sexo: paciente.sexo as "M" | "F" | "O",
+      sexo: paciente.sexo as 'M' | 'F' | 'O',
       peso: paciente.peso,
       createdAt: paciente.createdAt,
       updatedAt: paciente.updatedAt,
