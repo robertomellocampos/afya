@@ -16,25 +16,23 @@ export class AgendamentoController {
     private readonly updateAgendamentoUseCase: UpdateAgendamentoUseCase,
     private readonly deleteAgendamentoUseCase: DeleteAgendamentoUseCase
   ) {}
+
   public async create(req: Request, res: Response): Promise<Response> {
     const parseResult = createAgendamentoSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({ errors: parseResult.error.errors });
     }
 
-    const useCase = this.createAgendamentoUseCase;
     const dto = parseResult.data;
-    const result = await useCase.execute({
-      pacienteId: dto.pacienteId,
-      data: new Date(dto.data),
-      motivo: dto.motivo,
-    });
+    const result = await this.createAgendamentoUseCase.execute(
+      { pacienteId: dto.pacienteId, data: new Date(dto.data), motivo: dto.motivo },
+      req.usuarioEmail
+    );
 
     if (result.isLeft()) {
       const error = result.getValue();
       return res.status(error.statusCode).json({ message: error.message });
     }
-
     return res.status(201).json(result.getValue());
   }
 
@@ -46,7 +44,6 @@ export class AgendamentoController {
   public async listPaginated(req: Request, res: Response): Promise<Response> {
     const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
     const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 10;
-
     const result = await this.listAgendamentosPaginatedUseCase.execute({ page, pageSize });
     return res.status(200).json(result.getValue());
   }
@@ -56,19 +53,17 @@ export class AgendamentoController {
     if (!parseResult.success) {
       return res.status(400).json({ errors: parseResult.error.errors });
     }
-
-    const useCase = this.updateAgendamentoUseCase;
     const dto = parseResult.data;
-    const result = await useCase.execute(req.params.id, {
-      data: dto.data ? new Date(dto.data) : undefined,
-      motivo: dto.motivo,
-    });
+    const result = await this.updateAgendamentoUseCase.execute(
+      req.params.id,
+      { data: dto.data ? new Date(dto.data) : undefined, motivo: dto.motivo },
+      req.usuarioEmail
+    );
 
     if (result.isLeft()) {
       const error = result.getValue();
       return res.status(error.statusCode).json({ message: error.message });
     }
-
     return res.status(200).json(result.getValue());
   }
 
@@ -78,7 +73,6 @@ export class AgendamentoController {
       const error = result.getValue();
       return res.status(error.statusCode).json({ message: error.message });
     }
-
     return res.status(204).send();
   }
 }

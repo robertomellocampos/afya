@@ -9,6 +9,7 @@ export class PrismaPacienteRepository implements PacienteRepository {
   public async create(pacienteEntity: Paciente): Promise<Paciente> {
     const paciente = await prisma.paciente.create({
       data: {
+        id: pacienteEntity.id,
         nome: pacienteEntity.nome,
         telefone: pacienteEntity.telefone,
         email: pacienteEntity.email,

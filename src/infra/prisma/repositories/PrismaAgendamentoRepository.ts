@@ -75,6 +75,21 @@ export class PrismaAgendamentoRepository implements AgendamentoRepository {
     };
   }
 
+  public async findConflict(data: Date, excludeId?: string): Promise<Agendamento | null> {
+    const ag = await prisma.agendamento.findFirst({
+      where: { data, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+    });
+    if (!ag) return null;
+    return Agendamento.fromPrisma({
+      id: ag.id,
+      pacienteId: ag.pacienteId,
+      data: ag.data,
+      motivo: ag.motivo,
+      createdAt: ag.createdAt,
+      updatedAt: ag.updatedAt,
+    });
+  }
+
   public async findById(id: string): Promise<Agendamento | null> {
     const ag = await prisma.agendamento.findUnique({ where: { id } });
     if (!ag) return null;

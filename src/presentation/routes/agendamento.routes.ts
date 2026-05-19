@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { container } from 'tsyringe';
 import { AgendamentoController } from '../controllers/AgendamentoController';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const agendamentoRoutes = Router();
 const controller = container.resolve(AgendamentoController);
+
+agendamentoRoutes.use(authMiddleware);
 
 agendamentoRoutes.post('/', controller.create.bind(controller));
 agendamentoRoutes.get('/paginated', controller.listPaginated.bind(controller));

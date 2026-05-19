@@ -1,0 +1,40 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: afya-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: afya
+      MYSQL_USER: afya
+      MYSQL_PASSWORD: "Kp7#mXqL2@vR9nWd"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "afya", "-pKp7#mXqL2@vR9nWd"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build: .
+    container_name: afya-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "mysql://afya:Kp7%23mXqL2%40vR9nWd@mysql:3306/afya"
+      JWT_SECRET: "afya-jwt-secret-change-in-prod"
+      PORT: 3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  mysql_data:

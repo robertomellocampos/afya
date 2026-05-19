@@ -2,7 +2,9 @@ import { injectable, inject } from 'tsyringe';
 import { EitherResult, Left, Right } from '../../shared/results/EitherResult';
 import { AppError } from '../../shared/errors/AppError';
 import { AgendamentoRepository, CreateAgendamentoData } from '../../domain/repositories/AgendamentoRepository';
+import { AuditLogRepository } from '../../domain/repositories/AuditLogRepository';
 import { Agendamento } from '../../domain/entities/Agendamento';
+import { AuditLog } from '../../domain/entities/AuditLog';
 import { Log } from '../../shared/log/Log';
 
 @injectable()
@@ -10,13 +12,20 @@ export class CreateAgendamentoUseCase {
   constructor(
     @inject('AgendamentoRepository')
     private readonly agendamentoRepository: AgendamentoRepository,
+    @inject('AuditLogRepository')
+    private readonly auditLogRepository: AuditLogRepository,
     @inject('Log')
     private readonly logger: Log
   ) {}
 
-  public async execute(data: CreateAgendamentoData): Promise<EitherResult<AppError, Agendamento>> {
+  public async execute(data: CreateAgendamentoData, usuarioEmail: string): Promise<EitherResult<AppError, Agendamento>> {
     try {
       this.logger.setContext(CreateAgendamentoUseCase.name);
+
+      const conflict = await this.agendamentoRepository.findConflict(data.data);
+      if (conflict) {
+        return Left.create(new AppError('Já existe um agendamento neste horário', 409));
+      }
 
       const agEntity = Agendamento.createNew({
         pacienteId: data.pacienteId,
@@ -25,10 +34,17 @@ export class CreateAgendamentoUseCase {
       });
 
       this.logger.log('Creating agendamento', { pacienteId: data.pacienteId });
-
       const agendamento = await this.agendamentoRepository.create(agEntity);
-
       this.logger.log('Agendamento created', { id: agendamento.id });
+
+      await this.auditLogRepository.create(
+        AuditLog.createNew({
+          usuarioEmail,
+          acao: 'AGENDAMENTO_CREATE',
+          entidadeId: agendamento.id,
+          dadosAlterados: JSON.stringify({ pacienteId: agendamento.pacienteId, data: agendamento.data, motivo: agendamento.motivo }),
+        })
+      );
 
       return Right.create<AppError, Agendamento>(agendamento);
     } catch (error: unknown) {

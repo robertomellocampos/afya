@@ -3,28 +3,60 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model Paciente {
-  id          String   @id @default(uuid())
-  nome        String
-  telefone    String
-  email       String   @unique
+  id             String         @id @default(uuid())
+  nome           String
+  telefone       String
+  email          String         @unique
   dataNascimento DateTime
-  sexo        String
-  peso        Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  agendamentos Agendamento[]
+  sexo           String
+  peso           Float
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  agendamentos   Agendamento[]
+  notes          PacienteNote[]
 }
 
 model Agendamento {
-  id         String   @id @default(uuid())
+  id         String         @id @default(uuid())
   pacienteId String
-  paciente   Paciente @relation(fields: [pacienteId], references: [id])
+  paciente   Paciente       @relation(fields: [pacienteId], references: [id])
   data       DateTime
   motivo     String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  notes      PacienteNote[]
+}
+
+model PacienteNote {
+  id            String      @id @default(uuid())
+  pacienteId    String
+  agendamentoId String
+  nota          String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  paciente      Paciente    @relation(fields: [pacienteId], references: [id])
+  agendamento   Agendamento @relation(fields: [agendamentoId], references: [id])
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  usuarioEmail   String
+  acao           String
+  entidadeId     String
+  dadosAlterados String   @db.Text
+  createdAt      DateTime @default(now())
 }

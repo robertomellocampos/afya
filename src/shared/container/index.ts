@@ -3,9 +3,20 @@ import { PacienteRepository } from '../../domain/repositories/PacienteRepository
 import { PrismaPacienteRepository } from '../../infra/prisma/repositories/PrismaPacienteRepository';
 import { AgendamentoRepository } from '../../domain/repositories/AgendamentoRepository';
 import { PrismaAgendamentoRepository } from '../../infra/prisma/repositories/PrismaAgendamentoRepository';
+import { PacienteNoteRepository } from '../../domain/repositories/PacienteNoteRepository';
+import { PrismaPacienteNoteRepository } from '../../infra/prisma/repositories/PrismaPacienteNoteRepository';
+import { UsuarioRepository } from '../../domain/repositories/UsuarioRepository';
+import { PrismaUsuarioRepository } from '../../infra/prisma/repositories/PrismaUsuarioRepository';
+import { AuditLogRepository } from '../../domain/repositories/AuditLogRepository';
+import { PrismaAuditLogRepository } from '../../infra/prisma/repositories/PrismaAuditLogRepository';
+import { JwtService } from '../../infra/auth/JwtService';
 import { Log } from '../log/Log';
 import { ConsoleLog } from '../log/ConsoleLog';
 
 container.registerSingleton<PacienteRepository>('PacienteRepository', PrismaPacienteRepository);
 container.registerSingleton<AgendamentoRepository>('AgendamentoRepository', PrismaAgendamentoRepository);
+container.registerSingleton<PacienteNoteRepository>('PacienteNoteRepository', PrismaPacienteNoteRepository);
+container.registerSingleton<UsuarioRepository>('UsuarioRepository', PrismaUsuarioRepository);
+container.registerSingleton<AuditLogRepository>('AuditLogRepository', PrismaAuditLogRepository);
+container.registerSingleton<JwtService>('JwtService', JwtService);
 container.registerSingleton<Log>('Log', ConsoleLog);
