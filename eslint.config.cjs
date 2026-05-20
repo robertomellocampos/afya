@@ -64,6 +64,12 @@ const legacyConfig = {
     },
   },
   ignorePatterns: ['replace-gc-envs.js'],
+  overrides: [
+    {
+      files: ['src/**/__tests__/**/*.ts'],
+      env: { jest: true },
+    },
+  ],
 };
 
 module.exports = [
